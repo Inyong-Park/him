@@ -144,6 +144,28 @@
   .rvitem{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:var(--shadow)}
   .rvitem .rq{font-size:.85rem;font-weight:600;white-space:pre-wrap}
   .rvitem .ra{font-size:.8rem;margin-top:6px}.rvitem .ra .ans{color:var(--ok);font-weight:700}
+  /* ===== SYNC ===== */
+  .syncline{display:flex;align-items:center;gap:6px;margin-top:5px}
+  .sdot{width:8px;height:8px;border-radius:50%;background:#cfcabd;display:inline-block}
+  .sdot.on{background:var(--ok)}.sdot.off{background:#cfcabd}.sdot.busy{background:var(--star)}.sdot.err{background:var(--no)}
+  #syncTxt{font-size:.72rem;color:var(--muted)}
+  .synccog{border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:99px;cursor:pointer;font-family:inherit;margin-left:2px}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(31,36,48,.45);z-index:60;align-items:center;justify-content:center;padding:18px}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--paper);border-radius:18px;padding:20px;width:100%;max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,.25);max-height:90vh;overflow:auto}
+  .modal h3{margin:0 0 8px;font-size:1.08rem}
+  .mdesc{font-size:.8rem;color:var(--muted);margin:0 0 14px;line-height:1.5}
+  .mlab{display:block;font-size:.73rem;font-weight:700;color:var(--ink);margin:10px 0 5px}
+  .mlab .opt{font-weight:500;color:var(--muted)}
+  .min{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;font-size:.88rem;font-family:inherit;background:#faf9f6}
+  .min:focus{outline:none;border-color:var(--accent);background:#fff}
+  .smsg{font-size:.78rem;font-weight:600;margin:10px 0 4px;min-height:18px}
+  .smsg.ok{color:var(--ok)}.smsg.bad{color:var(--no)}.smsg.busy{color:var(--star)}
+  .mrow{display:flex;gap:8px;margin-top:8px}
+  .mbtn{flex:1;border:1px solid var(--line);background:var(--paper);border-radius:11px;padding:12px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit}
+  .mbtn.fill{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .mbtn.ghost{color:var(--muted)}
+  .mhint{font-size:.72rem;color:var(--muted);margin:12px 0 0;word-break:break-all}
 </style>
 </head>
 <body>
@@ -154,6 +176,7 @@
       <div>
         <h1>HRM전문가 합격 대시보드</h1>
         <div class="sub">한국공인노무사회 역량인증 · 합격선 70점(35/50)</div>
+        <div class="syncline"><span id="syncDot" class="sdot off"></span><span id="syncTxt">동기화 꺼짐</span><button id="syncOpen" class="synccog">⚙️ 동기화</button></div>
       </div>
       <div class="dday"><div class="big" id="ddayNum">D-?</div><div class="lbl">7/4(토) 시험</div></div>
     </div>
@@ -164,7 +187,28 @@
     </div>
   </div>
 
-  <!-- PLAN -->
+  <!-- SYNC MODAL -->
+  <div class="modal-bg" id="syncModal">
+    <div class="modal">
+      <h3>⚙️ 기기 간 동기화</h3>
+      <p class="mdesc">GitHub 토큰을 한 번 입력하면, 풀이·오답·별표·점수·플랜이 본인 비공개 Gist에 저장돼 맥·아이폰 어디서든 같은 기록을 봅니다. 토큰은 이 기기 브라우저에만 저장되고 외부로 전송되지 않습니다.</p>
+      <label class="mlab">GitHub Personal Access Token</label>
+      <input id="tokenIn" class="min" type="password" placeholder="github_pat_..." autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label class="mlab">Gist ID <span class="opt">(비워두면 자동 생성)</span></label>
+      <input id="gistIn" class="min" type="text" placeholder="(자동 생성됨)" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div id="syncMsg" class="smsg"></div>
+      <div class="mrow">
+        <button id="syncConnect" class="mbtn fill">연결 / 저장</button>
+        <button id="syncPull" class="mbtn">클라우드에서 불러오기</button>
+      </div>
+      <div class="mrow">
+        <button id="syncOff" class="mbtn ghost">동기화 끄기</button>
+        <button id="syncClose" class="mbtn ghost">닫기</button>
+      </div>
+      <p class="mhint" id="gistHint"></p>
+    </div>
+  </div>
+
   <div class="pane on" id="pane-plan">
     <div class="pmini"><div class="bar"><span id="barFill"></span></div><div class="lbl" id="barLbl">0%</div></div>
     <div id="schedule"></div>
@@ -585,7 +629,7 @@ document.addEventListener('click',e=>{
 });
 $('resetPlan').addEventListener('click',()=>{if(confirm('플랜 체크·암기 표시를 초기화할까요?')){pstate={tasks:{},memo:{}};applyPlan();savePlan();}});
 function loadPlan(){try{const r=localStorage.getItem('hrm_app_plan');if(r)pstate=JSON.parse(r);}catch(e){}applyPlan();}
-function savePlan(){try{localStorage.setItem('hrm_app_plan',JSON.stringify(pstate));}catch(e){}}
+function savePlan(){try{localStorage.setItem('hrm_app_plan',JSON.stringify(pstate));}catch(e){}cloudPushDebounced();}
 
 /* ============ QUIZ ============ */
 const NUMK=["①","②","③","④"];
@@ -680,11 +724,114 @@ $('retryWrong').addEventListener('click',()=>{
 });
 $('goHome').addEventListener('click',()=>{$('qresult').classList.add('hidden');$('qhome').classList.remove('hidden');refreshBest();});
 function loadQuiz(){try{const r=localStorage.getItem('hrm_app_quiz');if(r)qstore=JSON.parse(r);}catch(e){}qstore.best=qstore.best||{};qstore.wrong=qstore.wrong||{};qstore.star=qstore.star||{};refreshBest();}
-function saveQuiz(){try{localStorage.setItem('hrm_app_quiz',JSON.stringify(qstore));}catch(e){}}
+function saveQuiz(){try{localStorage.setItem('hrm_app_quiz',JSON.stringify(qstore));}catch(e){}cloudPushDebounced();}
+
+/* ============ CLOUD SYNC (GitHub Gist) ============ */
+const SYNC={tok:'',gist:'',on:false};
+const GIST_FILE='hrm_dashboard_data.json';
+function loadSyncCfg(){
+  try{SYNC.tok=localStorage.getItem('hrm_sync_tok')||'';SYNC.gist=localStorage.getItem('hrm_sync_gist')||'';SYNC.on=!!(SYNC.tok&&localStorage.getItem('hrm_sync_on')==='1');}catch(e){}
+}
+function setDot(state,txt){const d=$('syncDot');d.className='sdot '+state;$('syncTxt').textContent=txt;}
+function refreshSyncUI(){
+  if(SYNC.on){setDot('on','동기화 켜짐');}else{setDot('off','동기화 꺼짐');}
+  $('tokenIn').value=SYNC.tok;$('gistIn').value=SYNC.gist;
+  $('gistHint').textContent=SYNC.gist?('Gist: '+SYNC.gist):'';
+}
+function payload(){return JSON.stringify({plan:pstate,quiz:qstore,_t:Date.now()});}
+function applyPayload(obj){
+  if(obj.plan){pstate=obj.plan;applyPlan();savePlan();}
+  if(obj.quiz){qstore=obj.quiz;qstore.best=qstore.best||{};qstore.wrong=qstore.wrong||{};qstore.star=qstore.star||{};refreshBest();saveQuizLocalOnly();}
+}
+function saveQuizLocalOnly(){try{localStorage.setItem('hrm_app_quiz',JSON.stringify(qstore));}catch(e){}}
+
+async function gistCreate(){
+  const res=await fetch('https://api.github.com/gists',{method:'POST',
+    headers:{'Authorization':'Bearer '+SYNC.tok,'Accept':'application/vnd.github+json'},
+    body:JSON.stringify({description:'HRM 대시보드 학습 데이터',public:false,files:{[GIST_FILE]:{content:payload()}}})});
+  if(!res.ok)throw new Error('생성 실패 ('+res.status+')');
+  const j=await res.json();return j.id;
+}
+async function gistWrite(){
+  const res=await fetch('https://api.github.com/gists/'+SYNC.gist,{method:'PATCH',
+    headers:{'Authorization':'Bearer '+SYNC.tok,'Accept':'application/vnd.github+json'},
+    body:JSON.stringify({files:{[GIST_FILE]:{content:payload()}}})});
+  if(!res.ok)throw new Error('저장 실패 ('+res.status+')');
+}
+async function gistRead(){
+  const res=await fetch('https://api.github.com/gists/'+SYNC.gist,{headers:{'Authorization':'Bearer '+SYNC.tok,'Accept':'application/vnd.github+json'}});
+  if(!res.ok)throw new Error('불러오기 실패 ('+res.status+')');
+  const j=await res.json();const f=j.files&&j.files[GIST_FILE];
+  if(!f||!f.content)throw new Error('데이터 파일 없음');
+  return JSON.parse(f.content);
+}
+
+let pushTimer=null;
+function cloudPushDebounced(){
+  if(!SYNC.on)return;
+  clearTimeout(pushTimer);
+  pushTimer=setTimeout(async()=>{
+    try{setDot('busy','저장 중…');await gistWrite();setDot('on','동기화됨');}
+    catch(e){setDot('err','저장 오류');}
+  },1200);
+}
+
+/* modal wiring */
+$('syncOpen').addEventListener('click',()=>{$('syncMsg').textContent='';$('syncMsg').className='smsg';refreshSyncUI();$('syncModal').classList.add('show');});
+$('syncClose').addEventListener('click',()=>$('syncModal').classList.remove('show'));
+$('syncModal').addEventListener('click',e=>{if(e.target.id==='syncModal')$('syncModal').classList.remove('show');});
+function msg(t,cls){$('syncMsg').textContent=t;$('syncMsg').className='smsg '+(cls||'');}
+
+$('syncConnect').addEventListener('click',async()=>{
+  const tok=$('tokenIn').value.trim();const gid=$('gistIn').value.trim();
+  if(!tok){msg('토큰을 입력하세요.','bad');return;}
+  SYNC.tok=tok;SYNC.gist=gid;
+  try{
+    msg('연결 중…','busy');setDot('busy','연결 중…');
+    if(!SYNC.gist){
+      // first time: push/create. but if there's existing local data, create with it
+      SYNC.gist=await gistCreate();
+      msg('새 Gist 생성 완료. 이 기기 데이터를 클라우드에 올렸습니다.','ok');
+    }else{
+      // existing gist: try read first to merge-by-newest? simplest: pull from cloud
+      try{const remote=await gistRead();applyPayload(remote);msg('기존 Gist에 연결하고 클라우드 데이터를 불러왔습니다.','ok');}
+      catch(e){await gistWrite();msg('Gist에 연결하고 이 기기 데이터를 저장했습니다.','ok');}
+    }
+    SYNC.on=true;
+    localStorage.setItem('hrm_sync_tok',SYNC.tok);
+    localStorage.setItem('hrm_sync_gist',SYNC.gist);
+    localStorage.setItem('hrm_sync_on','1');
+    refreshSyncUI();setDot('on','동기화 켜짐');
+    $('gistHint').textContent='Gist: '+SYNC.gist+'  (다른 기기에선 이 ID를 넣거나, 같은 토큰으로 자동 인식)';
+  }catch(e){
+    SYNC.on=false;msg('실패: '+e.message+' — 토큰 권한(Gists: Read and write)을 확인하세요.','bad');setDot('err','연결 실패');
+  }
+});
+$('syncPull').addEventListener('click',async()=>{
+  if(!SYNC.tok||!SYNC.gist){msg('먼저 연결하세요.','bad');return;}
+  if(!confirm('클라우드 데이터로 이 기기 기록을 덮어쓸까요?'))return;
+  try{msg('불러오는 중…','busy');const remote=await gistRead();applyPayload(remote);msg('클라우드에서 불러왔습니다.','ok');}
+  catch(e){msg('실패: '+e.message,'bad');}
+});
+$('syncOff').addEventListener('click',()=>{
+  SYNC.on=false;localStorage.setItem('hrm_sync_on','0');
+  if(confirm('저장된 토큰도 이 기기에서 지울까요? (Gist 데이터는 그대로 유지)')){
+    localStorage.removeItem('hrm_sync_tok');SYNC.tok='';$('tokenIn').value='';
+  }
+  refreshSyncUI();msg('동기화를 껐습니다.','');
+});
 
 /* ============ INIT ============ */
 function dday(){const diff=Math.round((EXAM_DATE-today0)/86400000);$('ddayNum').textContent=diff>0?'D-'+diff:diff===0?'D-DAY':'종료';}
 buildPlan();buildCards();dday();loadPlan();loadQuiz();
+loadSyncCfg();refreshSyncUI();
+// on launch, if sync on, pull latest so other-device edits show up
+(async()=>{
+  if(SYNC.on&&SYNC.tok&&SYNC.gist){
+    try{setDot('busy','불러오는 중…');const remote=await gistRead();applyPayload(remote);setDot('on','동기화됨');}
+    catch(e){setDot('err','불러오기 오류');}
+  }
+})();
 </script>
 </body>
 </html>
