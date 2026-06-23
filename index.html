@@ -166,6 +166,31 @@
   .mbtn.fill{background:var(--ink);color:#fff;border-color:var(--ink)}
   .mbtn.ghost{color:var(--muted)}
   .mhint{font-size:.72rem;color:var(--muted);margin:12px 0 0;word-break:break-all}
+  /* ===== EXPLANATION / RESULT SUBJECT / READING ===== */
+  .expbox{display:none;margin-top:10px;padding:12px 14px;border-radius:12px;background:#f3f1ea;border:1px solid var(--line);font-size:.86rem;color:#33384a;line-height:1.6}
+  .expbox.show{display:block}
+  .exlab{font-size:.66rem;font-weight:800;color:var(--accent);margin-bottom:4px}
+  .subrow{display:flex;gap:8px;margin-top:12px}
+  .subrow.single{max-width:60%;margin-left:auto;margin-right:auto}
+  .subcard{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:12px;text-align:center;box-shadow:var(--shadow);position:relative}
+  .subcard.fail{border-color:var(--no);background:var(--no-soft)}
+  .subcard .sn{display:block;font-size:.72rem;color:var(--muted);font-weight:700}
+  .subcard .sv{display:block;font-size:1.3rem;font-weight:800;margin-top:3px}
+  .subcard .sf{display:block;font-size:.62rem;font-weight:800;color:var(--no);margin-top:2px}
+  .rex{margin-top:7px;padding-top:7px;border-top:1px dashed #d7d2c6;font-size:.8rem;color:#3a3f52;line-height:1.55}
+  .ra{font-size:.8rem;margin-top:6px}.ans{color:var(--ok);font-weight:700}
+  /* reading */
+  .rsub{display:flex;gap:6px;margin-bottom:12px}
+  .rtab{flex:1;border:1px solid var(--line);background:var(--paper);border-radius:11px;padding:10px;font-size:.84rem;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+  .rtab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .rgrp{font-size:.72rem;font-weight:800;color:var(--accent);background:var(--accent-soft);display:inline-block;padding:3px 9px;border-radius:99px;margin:14px 2px 8px}
+  .rcard{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+  .rcard h4{margin:0 0 8px;font-size:1rem;letter-spacing:-.01em}
+  .rcard p{margin:0;font-size:.9rem;line-height:1.72;color:#2f3442}
+  .trap{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--star);border-radius:12px;padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow)}
+  .trap .tt{font-size:.9rem;font-weight:800}
+  .trap .td{font-size:.84rem;color:#3a3f52;margin-top:4px;line-height:1.55}
+  .rdisc{font-size:.72rem;color:var(--muted);text-align:center;margin:16px 4px 0;line-height:1.5}
 </style>
 </head>
 <body>
@@ -184,6 +209,7 @@
       <button class="on" data-tab="plan">📅 플랜</button>
       <button data-tab="cards">📖 암기</button>
       <button data-tab="quiz">✏️ 기출</button>
+      <button data-tab="read">📚 읽기</button>
     </div>
   </div>
 
@@ -264,6 +290,7 @@
           <div class="chip" data-m="random">랜덤</div>
           <div class="chip" data-m="wrong">오답만</div>
           <div class="chip" data-m="star">별표만</div>
+          <div class="chip" data-m="calc">계산만</div>
         </div>
       </div>
       <button class="start" id="startBtn">풀이 시작</button>
@@ -282,6 +309,7 @@
         <div class="qtext" id="qtext"></div>
         <div class="choices" id="choices"></div>
         <div class="verdict" id="verdict"></div>
+        <div class="expbox" id="qexp"></div>
       </div>
       <button class="next hidden" id="nextBtn">다음 →</button>
     </div>
@@ -292,12 +320,23 @@
         <div id="resPf"></div>
         <div class="line" id="resLine"></div>
       </div>
+      <div class="subrow" id="subScore"></div>
       <div class="rbtns">
         <button id="retryWrong">오답만 다시</button>
         <button class="fill" id="goHome">처음으로</button>
       </div>
       <div class="review" id="reviewBox"></div>
     </div>
+  </div>
+
+  <!-- READ -->
+  <div class="pane" id="pane-read">
+    <div class="rsub">
+      <button class="rtab on" data-rtab="today">📖 오늘의 읽을거리</button>
+      <button class="rtab" data-rtab="trap">⚠️ 빈출 함정</button>
+    </div>
+    <div id="read-today"></div>
+    <div id="read-trap" class="hidden"></div>
   </div>
 
 </div>
@@ -549,6 +588,194 @@ const EXAMS={
 ]}
 };
 
+/* ============ 해설 (오답노트) — round → {문항: 해설} ============ */
+/* 공식 정답표 기준으로 정리한 학습 보조 해설. 교재·실제 지문과 교차 확인 권장. */
+const EXP={
+"39":{
+1:"인사관리→인적자원관리→전략적HRM로 갈수록 인사부서가 담당자→독립→임원→비전구축으로 격상한다. ①의 유형·역할 매칭이 이 단계와 어긋난다.",
+2:"면접법은 직무수행자의 '정신적 활동'까지 파악하는 대표 수집법. 정신적 활동을 제외해야 한다는 ④가 틀림.",
+3:"직무급 도입 시 반드시 하나의 평가방법만 써야 하는 건 아니다(병행 가능). ③이 틀림.",
+4:"직무급 도입 필요성 제기 시점·맥락 서술이 사실과 달라 ②가 부적합.",
+5:"정원=업무량÷근로시간×(1+여유율). 법정 13000÷1800×1.1≈7.9→8명(현 7명, 1명 충원), 실제 13000÷2010×1.1≈7.1→현 적정. 그래서 ①.",
+6:"NCS 필기는 직업기초능력 10개를 '모두' 출제하지 않고 직무 관련 일부를 선별 출제. '모두 포함'한 ③이 틀림.",
+7:"멘토링 활동계획서는 멘티가 아니라 '멘토'가 작성하는 것이 일반적. ④가 틀림.",
+8:"면접위원 독립성은 원칙이나 '어떤 상황에서도 정보교환·토의 금지'는 과도. ③이 부적합.",
+9:"In-basket(서류함)은 발표가 핵심이 아니라 결재·우선순위 처리로 의사결정·문제해결을 보는 기법. 발표 중심으로 본 ①이 틀림.",
+10:"신입 이탈의 핵심 원인은 기대-현실 괴리(Entry Shock)이지 '기존문화 비판'이 아니다. ④가 틀림.",
+11:"OJT는 현장 실무가 필요한 직무에 유용. '현장실습이 어려운 사무직에 유용'하다는 ②가 틀림.",
+12:"Schein은 처음 5개 경력 닻을 제시. '9가지로 재정의'는 사실과 다르다. ③이 틀림.",
+13:"코칭은 성과·업무 중심의 이성적 접근이며 '감성적 측면의 행동 변화'는 멘토링 쪽 특성. ④가 부적합.",
+14:"직급(SA/M)이 오른 김유신은 '직급승진'. '역진승진'이라는 표현 자체가 틀림. ②.",
+15:"직책은 권한·책임의 정도(팀장·본부장 등)를 뜻하며, 과장·차장·부장은 '호칭/직위'에 가깝다. ②의 직책 설명이 부정확.",
+16:"평가 프로세스: 성과목표 수립→조직 성과지표 도출→직원 업무목표→점수화. ①이 올바른 연결.",
+17:"KPI 측정: 주요과제→KPI 설정→가중치→목표수준→측정근거→피드백. ②.",
+18:"성과지표 양식 항목 = KPI·CSF·가중치·목표수준·점수·근거·Feedback제공자. ④.",
+19:"KPI는 '지표달성'이 목적, OKR은 '목표달성·노하우·성장'이 목적. ①이 올바른 대비.",
+20:"OKR의 장점은 참여·협업이지 '개인 역량 의존'이 아니다. ③이 부적합.",
+21:"OKR 실행: 목표설정→핵심결과 설정→기간 설정→연결성 확보→주기적 검토→인정. ④.",
+22:"OKR 핵심 3도구 = 대화(Conversation)·피드백(Feedback)·인정(Recognition). ①.",
+23:"역량 3요소 = Knowledge·Skill·Attitude(KSA). ①.",
+24:"역량체계 구축: 기초역량조사→핵심(공통)역량 선정→직무역량 인터뷰→역량 프로파일 도출. ③.",
+25:"그룹별 상대 기준으로 평가해 우열이 왜곡되는 오류 = 대비오류. ②.",
+26:"성과 high·역량 low는 결과는 내지만 역량이 부족한 'Diligent(근면형)'. ②.",
+27:"보상시스템 고려요소의 마지막 항목은 '고유성'. 배타성/보편성이 아니다. ④.",
+28:"PS(이익분배)·인정은 변동급이라 제외. 고정급으로만 묶인 보기는 기본급·정기상여금·수당의 ②.",
+29:"성과급 지급이 시작되는 임계점 = Threshold. ③.",
+30:"선택적 복리후생의 장점은 욕구 반영·참여인데 '근로자대표 참여 배제'는 장점이 아니다. ④가 부적합.",
+31:"'사업주를 위해 행위하는 자'인지는 형식적 직명이 아니라 실질적 권한·책임으로 판단. 형식적 직명에 따른다는 ④가 틀림.",
+32:"법정 최저기준 미달 근로조건은 동의해도 무효. '동의하면 유효'라는 ④가 틀림.",
+33:"미달은 그 부분만 무효(근기법 기준), 상회는 유효, 단협 위반은 무효(단협 기준)로 가·나·라 옳음. '취규 미달 계약이 전체 유효'라는 다가 틀려 3개.",
+34:"신원보증계약(실손해 배상 보증)은 위약예정금지 위반이 아니다. 위반의 예로 든 ③이 틀림.",
+35:"가·다만 옳음. 주택·학자금 대여는 임금 아님(나 오류), 실비변상도 임금 아님(라 오류) → 2개.",
+36:"통상임금을 노사합의로 제외해도 그 합의는 무효(강행규정). 효력 있다는 ④가 틀림.",
+37:"임금 일부 공제가 허용되는 근거는 '법령 또는 단체협약'뿐. 취업규칙·근로계약으로도 가능하다고 한 ①이 틀림. (단골 함정)",
+38:"최저임금 산입 범위 서술이 부정확. 매월 1회 이상 정기 지급 임금이 산입되는데 '그 외의 임금'이 산입된다고 한 ②가 틀림.",
+39:"옳은 것은 나(18세 미만 7h·35h)·라(특별사정 추가연장)뿐. 대기시간은 근로시간 포함(가 오류), 연장합의는 구두도 가능(다 오류) → 2개.",
+40:"부당해고 기간은 '출근 간주'라 소정근로일수에서 빼지 않는다. 빼고 산정한다는 ②가 틀림.",
+41:"필수기재에 '상여·최저임금'은 없고, 동의·신고 세부에 오류가 있어 옳은 것은 2개.",
+42:"근무지·직무를 특정 약정했어도 절차 미준수만으로 당연무효는 아니며 비교형량으로 판단. ③이 가장 올바름.",
+43:"해고예고수당은 임금이 아니라 별도 법정수당. '근기법상 임금에 해당'한다는 ①이 틀림.",
+44:"화해안 제시 가능 여부, 이행강제금 부과 주체(법원이 아니라 노동위) 등에서 오류가 많아 '적합하지 않은 것'이 4개.",
+45:"금품청산 14일, 미지급 15일째부터 연 20% 지연이자, 명단공개 3년 내 2회 유죄·1년 내 3천만원. 14+15+20+3+2+1+3=58, ①.",
+46:"단시간근로자에게도 연차·유급휴일은 소정시간 비례로 적용. 적용 안 된다는 ②가 틀림.",
+47:"라(파견 1·1·총2년, 고령자 예외)·마(직접고용의무 위반 손해배상)만 옳음. ④.",
+48:"노동위는 조사·심문 후 시정명령 또는 기각결정을 한다는 ④가 옳음. (나머지: 전면적용 아님, 신청기간 6개월, 입증책임 사용자)",
+49:"옳지 않은 것은 나·다·마. 돌봄휴직·휴가 일수, 휴업기간 평균임금 산정 포함 여부, 단축 후 15~35시간 등에서 오류 → ③.",
+50:"평균임금 산정 제외기간에 해당하는 것 3개(수습기간·사용자귀책 휴업 등). ③."
+},
+"40":{
+1:"직무조사표는 업무분장·업무량·절차 중심으로 설계. ②의 조사 목적 연결이 어긋나 부적합.",
+2:"협의의 전략적 HRM은 경쟁우위를 위한 인적자원의 '우선적 고려'가 핵심인데 ④의 서술이 유형 특징과 어긋남.",
+3:"시기 구분상 호봉제→연봉제→직무급제 흐름의 시점·매칭이 ③에서 어긋난다.",
+4:"워크샘플링은 '관찰 기반 표본조사'이지 감독자가 중요·가치 면만 수집하는 방식이 아니다. ①이 틀림.",
+5:"직무평가에 반드시 직무 수행 담당자가 참석해야 하는 것은 아니다(주관성 우려로 책임자 참여). ①이 틀림.",
+6:"노동조합 반대가 있어도 직무급을 도입한 국내 사기업 사례는 존재. '찾을 수 없다'는 ③이 틀림.",
+7:"델파이는 정성적 방법. 계량적 방법에 델파이를 넣은 ②가 틀림.",
+8:"ILO 여유시간 권고 수치·해석이 부정확. '사무직은 여유 불필요'라는 단정이 ④에서 어긋남.",
+9:"정보처리능력은 정보능력의 하위. 기술능력 하위로 잘못 연결한 ④가 틀림.",
+10:"이 멘토링은 조직적응(사회화) 지원이 목적이라 '전문기술 습득'은 핵심 효과로 보기 어렵다. ③이 부적합.",
+11:"교육효과 분석은 실제로는 체계적으로 잘 이뤄지지 않는다는 점에서 ②의 단정이 부적합.",
+12:"급성장기 대량 수요는 사외모집이 효과적. 사내모집이 효과적이라는 ①이 틀림.",
+13:"액션러닝 단계·세부계획 서술에 오류가 있어 전항(①~④) 정답 처리된 문항.",
+14:"전통적(수직적) 경력경로는 일본보다는 한국 등에서 활용. 일본 전문가 육성과 연결한 ②가 틀림.",
+15:"형평성의 원칙은 기회의 균등성을 뜻하나, 보기 ①의 연결·서술이 원칙 정의와 어긋남.",
+16:"현재·미래는 '개인역량 중심·전문가(Specialist)'가 강조되는데 '조직역량 중심 Generalist'라 한 ④가 틀림.",
+17:"변화하는 인사 기능에서 비중이 커지는 역할은 전략적 역할 쪽이나, 이 교재 기준 정답은 ②(Consultative). 공식 정답표 기준으로 외울 것.",
+18:"최근 인사전략 지향점 = 능력중심·직원성장·조직성장. ①.",
+19:"역량 수준 정의는 직급별로 다른 기준을 적용하는 것이 맞다. '모든 직급 동일 기준'이라 한 ③이 틀림.",
+20:"MBO는 계획·실행·평가·적용(PDCA) 프로세스로 이루어진다는 ④가 올바른 연결.",
+21:"BSC 4관점 = 재무·고객·내부프로세스·학습과성장. '전략 목표'가 끼어든 ③이 어긋남.",
+22:"OKR의 목적은 '지표 달성'이 아니라 목표·성장. 지표달성은 KPI의 특징. ①이 잘못된 연결.",
+23:"OKR 목표 기준은 구체적·도전적·측정가능. '여유있는(Available)'은 아니다. ③.",
+24:"역량은 지식·능력보다 태도·자질이 더 중요하다는 명제가 과도해 ④가 부적합.",
+25:"역량체계 구축 순서: 기초역량 조사→핵심(공통)역량 선정→직무역량 인터뷰→역량 프로파일 도출. ②.",
+26:"다차원 지표·평정 척도 활용 설명 = 행동관찰 척도법(BOS). ①.",
+27:"성과 high·역량 low = Diligent(근면형). ②.",
+28:"호봉제 장점은 평가·인사 부담 경감, 인건비 예측. ④의 조합이 장점과 가장 거리가 멀어 답.",
+29:"전략적 보상: 기본 보상 항목 결정→연봉 수준 결정→기본연봉 인상→성과급 결정. ③.",
+30:"시장경쟁력 확보 조치와 거리가 먼 것은 '의견조사'. ①.",
+31:"근기법은 노동력 제공자 '모두'가 아니라 종속적 근로관계의 근로자를 적용 대상으로 한다. ②의 과도한 일반화가 틀림.",
+32:"옳은 것 2개. 상시근로자 수 산정·5인 미만 적용배제 규정 등에서 일부 보기가 오류.",
+33:"헌법상 평등원칙은 합리적 차별을 허용하는 '상대적 평등'. '절대적 평등'이라 한 ③이 틀림.",
+34:"의무적 명시사항이 아닌 것 = 승진·진급. ④.",
+35:"실비변상(작업용품·출장비·식비·업무추진비)은 임금이 아니다. 임금에 해당한다는 식으로 본 ④가 틀림.",
+36:"옳은 것 1개. 상계·통화·직접지급 보기 중 다수가 부정확하고, 전액지급 원칙(가)만 옳음.",
+37:"특정 근로자에 대한 취업 거부도 휴업에 해당할 수 있다. '집단적 조업중단만 휴업'이라 한 ④가 틀림.",
+38:"옳지 않은 것 3개. 특례업종·연속휴식 11시간, 산후 1년 여성 시간외근로 한도 등에서 오류가 3개.",
+39:"휴일근로는 8시간 이내 50%·초과분 100% 가산이 정확. ③이 옳음.",
+40:"옳은 것 1개. 연차 발생요건·소정근로일수·1년 기간제 26일 등 보기 중 하나만 정확.",
+41:"임신 중 1일 소정근로시간 변경 신청은 원칙적으로 허용해야 한다는 ③이 옳음.",
+42:"가(정의·5인 작성의무)·라(기득이익·신규근로자 적용)가 옳음. ④.",
+43:"반성문·사죄문 강제는 양심의 자유 침해라 미제출을 징계사유로 삼기 어렵다. ②가 틀림.",
+44:"옳은 것 1개. 통상해고는 징계 아님, 당연퇴직도 제23조 적용, 예고위반해도 사법상 효력 유지 등 다수가 오류.",
+45:"원직복직을 원하지 않을 때 임금상당액 이상 금품 지급 = 금전보상제도. ③.",
+46:"구제신청권자는 '근로자'이며 노동조합은 대신 신청할 수 없다. ①이 틀림.",
+47:"명예퇴직은 사용자 공고가 '청약의 유인', 근로자 신청이 청약이라 곧바로 종료되지 않는다. ②가 틀림.",
+48:"성희롱 성립에 '성적 동기·의도'는 요건이 아니다. 의도를 요건으로 본 ③이 틀림.",
+49:"단시간근로자에게도 유급휴일은 (비례) 적용된다. 적용 안 된다는 ④가 틀림.",
+50:"결원 대체(휴직·파견) 등은 2년 초과 사용 예외에 해당. ②가 옳음."
+},
+"41":{
+1:"Pfeffer의 인재관점은 고용보장·교육투자·자율문화 등. '직무이동·도전과제 부여를 통한 육성'은 그의 핵심 관점과 거리가 있어 ③이 부적합.",
+2:"의무·책무는 '직위'를 구성하는 단위이며, 요소들로 구성된다는 ②의 위계 설명이 부정확.",
+3:"R&R 정립이 목적이면 역할·기능 중심으로 설계. '업무수행 시간·성과지표 중심'이라 한 ④가 부적합.",
+4:"분류법은 실제로 널리 쓰인 평가법. '사용 사례를 찾을 수 없다'는 ①이 틀림.",
+5:"승진 보상을 '누구에게 배분했는가'(대상의 정당성) = 공정성의 원칙. ③.",
+6:"직급(A→SA), 자격(SA→M2), 직책(팀장 보임) 흐름으로 보면 자격·자격·역직승진의 ③이 맞음.",
+7:"기술적용능력은 기술능력의 하위. 정보능력 하위로 잘못 연결한 ②가 틀림.",
+8:"인바스켓은 결재·우선순위 처리로 의사결정을 보는 기법이지 '상호작용 학습'이 목적이 아니다. ④가 틀림.",
+9:"(나)는 시기·주체 특성에 맞고, (라)도 적합. 특성에 맞지 않게 묶인 것은 (나)(라)의 ②.",
+10:"마쿼트의 액션러닝 구성요소는 문제·학습팀·성찰·실행 등이며 '강사'는 핵심 구성요소가 아니다. ①.",
+11:"'개인적 경력목표 설정'은 경력개발 기능보다 멘티 본인의 역할에 가까워 ②의 연결이 부적합.",
+12:"패널면접은 다수 면접관·'1명'의 피면접자 형태. '다수 피면접자'라 한 ①이 틀림.",
+13:"미래 가상 상황을 묻는 것은 '상황면접'이며 역량(행동)면접은 과거 행동을 묻는다. ②가 틀림.",
+14:"Security/Stability 닻은 정년·안정 보장을 원하며 보상도 안정성 중심. '업적에 대한 인정·보상'과 연결한 ④가 부적합.",
+15:"델파이는 정성적 방법. 계량적 방법이라 한 ③이 틀림.",
+16:"변곡점기 핵심은 평가/보상 시스템 확립이라는 ②가 올바른 연결.",
+17:"평가체계 지향점 = 성과·능력·육성주의. '보상주의'는 아니다. ④. (단골 함정)",
+18:"성과는 과거·결과 지향(단기), 역량은 현재·미래 지향. '성과-장기적 관점'이라 한 ②가 틀림.",
+19:"팀 성과지표: 과제 도출→지표 도출→등급구간 설정→직원 업무목표 합의. ③.",
+20:"KPI 작성: 주요과제→CSF→KPI→가중치→목표수준→측정근거→피드백 제공자. ①.",
+21:"모든 지표를 정량화하는 것이 항상 좋은 건 아니다(정성지표도 필요). '가능한 한 정량적'이 절대적이라 본 ②가 부적합.",
+22:"과장 성과60%:역량40%. 80×0.6 + 85×0.4 = 48+34 = 82점. ③.",
+23:"OKR 실행: 목표설정→핵심결과 설정→핵심결과지표 선택→기간 설정→연결성 확보→검토→인정. ①.",
+24:"OKR 핵심도구 = 대화·피드백·인정. '가이드'는 아니다. ④.",
+25:"역량 3요소는 Skill·Attitude·Knowledge. 'Talent'는 거리가 멀다. ①.",
+26:"수준별 행동특성 정의·적합 여부로 평가 = 행동기준 척도법(BARS). ③.",
+27:"한 분야 인상이 다른 분야 평가에 번지는 오류 = 후광효과. ①.",
+28:"수당은 변동급(Variable). 'Variable'로 본 보기가 옳은데, 정답표 기준 ②가 가장 틀린 연결로 처리됨 — 공식 정답표대로 외울 것.",
+29:"보상 시스템 설계: 시스템 결정→보상구조→보상경쟁력→기본연봉체계→성과급. ③.",
+30:"기본 100p + 근속15년(×10=150p) + 배우자30p + 자녀2명(×20=40p) = 320p × 5,000원 = 1,600,000원. ③.",
+31:"기계·기구 소유만으로 독립사업자로 단정할 수 없다(종속성 종합판단). ③이 틀림.",
+32:"옳은 것 3개. 명시의무 위반은 벌금이나 '근로계약 무효'는 아니라서 나가 오류, 나머지(가·다·라) 옳음.",
+33:"노조법 제33조는 단협의 우월성을 명문 인정하고, 단협 위반 취규·근로계약은 무효·단협 기준에 의한다는 ④가 가장 적합.",
+34:"제20조는 위약금·손해배상액 '예정'을 금지하는 조항. 조문 번호(제21조 등) 서술이 어긋나는 ①이 틀림.",
+35:"가·나만 옳음. 퇴직 전 지위 무관(다)·보상조치 독립요건 아님(라) 등은 다툼이 있어 옳은 것 2개.",
+36:"옳은 것 2개. 상계·체크오프·공제 항목 보기 중 일부가 부정확.",
+37:"최저임금을 이유로 임금을 낮춰선 안 되며, 비교 기준은 '최저임금 산입 임금만'이 아니다. ②가 틀림.",
+38:"가7 + 나(1·12·50) + 다(6·34) + 라11 + 마(1·2·6·150). 7+1+12+50+6+34+11+1+2+6+150=280. ②.",
+39:"휴일은 근로의무 없는 날(소정근로일 제외), 휴가는 근로의무 있는 날의 면제라는 ①이 가장 적합.",
+40:"출근 간주: 출산전후휴가·업무상 부상휴업·부당해고기간 = 3개. ③. (정직기간·쟁의행위는 제외)",
+41:"과반수노조 동의는 노조위원장이 대표해 하면 되고, 위원장이 동의 안 하면 조합원 과반수로 갈음할 수 없다. ①이 틀림.",
+42:"취업규칙 필수기재에 '채용'은 없다. ②. (표창·제재·교육시설·식비부담은 포함)",
+43:"경위서 제출 명령에 따른 미제출 징계는 정당성에 문제가 적다. ④. (이중징계·부당전직·차별휴직은 문제)",
+44:"옳은 것 2개. 정리해고 60일 전(법은 50일), 서면통지 30일 전 실시 등 일부가 오류.",
+45:"진의란 진정 바라는 사항이 아니라 표시하려는 의사. 당시 최선이라 판단해 한 표시는 비진의가 아니라는 ③이 가장 적합.",
+46:"옳지 않은 것 3개. 근기법에 징계절차 규정은 없고, 절차규정 있으면 거쳐야 정당 — 다·라 등 3개가 틀림.",
+47:"가·다·라가 옳음(5인↑·국가지자체 적용, 손해 3배 배상, 입증책임 사용자). 시정신청 1년·제척기간(나)도 옳으나 정답 조합은 ③.",
+48:"임신 중 육아휴직 사용 횟수는 분할 횟수에 '포함되지 않는다'. 포함된다고 한 ④가 틀림.",
+49:"옳은 것 1개. 파견기간·직접고용 간주·반대의사 표시 시 예외 등 보기 중 다수가 부정확. ①.",
+50:"법원에서 부당해고가 아니라고 확정돼도 행정구제가 무조건 불가한 것은 아니다 — ②의 단정 오류는 아니고, 재심기간 등 ④가 틀림. 정답 ④.",
+}
+};
+
+/* ============ 오늘의 읽을거리 (줄글 해설) ============ */
+const READINGS=[
+{ch:"근로관계법", t:"해고, 한 장으로 이해하기", body:"해고는 '근로자 의사에 반해 사용자가 일방적으로 끝내는 모든 근로관계 종료'예요. 이름이 권고사직이든 당연퇴직이든, 실질이 일방적 종료면 해고로 봅니다. 크게 세 종류 — 능력·적격성이 모자라서(통상), 잘못을 저질러서(징계), 회사가 어려워서(경영=정리)로 나뉩니다. 여기서 시험이 노리는 핵심 숫자가 둘 있어요. 정리해고는 '근로자대표에게 해고 50일 전 통보·협의'가 4요건의 하나이고(60일로 바꿔 함정을 냅니다), 예고는 '30일 전 또는 30일분 통상임금'입니다. 예고를 안 해도 해고 자체는 유효하다는 점, 징계해고 서면통지에는 조문 나열이 아니라 '구체적 비위사실'을 적어야 한다는 점이 자주 나옵니다. 구제는 노동위 3개월 내 신청 → 중노위 재심 10일 내, 이 숫자만 정확히 외워두면 한 문제는 챙깁니다."},
+{ch:"근로관계법", t:"임금이냐 아니냐 — 이 선만 그으면 절반은 맞는다", body:"임금은 '근로의 대가로, 계속·정기적으로, 사용자에게 지급의무가 있는 금품'입니다. 이 정의에서 벗어나는 걸 골라내는 게 임금 문제의 전부예요. 축의금·조위금·위로금은 호의이지 대가가 아니라 임금이 아니고, 출장비·식비·작업용품비 같은 실비변상도 '쓴 돈을 메워주는 것'이라 임금이 아닙니다. 주택·학자금 대여처럼 복지성 지원도 임금이 아니에요. 반대로 해고예고수당·재해보상금 같은 법정수당은 임금으로 봅니다(단, 해고예고수당을 '근기법상 임금'이라 단정하는 보기는 함정으로 자주 틀린 보기로 나옵니다 — 맥락 주의). 지급 4원칙(통화·직접·전액·정기)에서 단골 함정은 '전액지급의 공제 예외는 법령 또는 단체협약뿐'이라는 점 — 취업규칙·근로계약으로는 공제 못 합니다. 자기앞수표·계좌입금은 허용된다는 것도 같이 외워두세요."},
+{ch:"근로관계법", t:"숫자만 모아서 — 근로시간·휴식", body:"법은 1일 8시간·1주 40시간이 기준이고, 합의하면 1주 12시간까지 연장할 수 있어요. 이 연장 합의는 구두로도 됩니다(서면 필수라는 보기는 함정). 휴게는 '4시간당 30분, 8시간당 1시간'을 근로시간 도중에, 무급으로, 자유롭게 쓰게 줘야 합니다(님 약점 포인트 — 도중·무급·자유이용 세 키워드를 묶어서 기억). 연차는 1년간 80% 이상 출근하면 15일이 생기고, 산재 휴업·출산휴가·부당해고기간은 '출근한 것으로 간주'해서 출근율을 깎지 않습니다. 반대로 정직기간은 보통 제외돼요. 18세 미만은 1일 7시간·1주 35시간으로 더 짧습니다. 이 단원은 개념보다 숫자 싸움이라, 8·40·12·30분·1시간·15일·7·35만 정확히 붙잡으면 됩니다."},
+{ch:"근로관계법", t:"비정규직 3종 — 기간제·단시간·파견", body:"기간제는 '2년'이 마법의 숫자예요. 2년을 넘겨 쓰면 기간의 정함이 없는(무기) 근로계약을 맺은 것으로 봅니다. 다만 결원 대체(휴직·파견)나 전문지식 활용 같은 예외 사유면 2년을 넘겨도 됩니다. 파견은 '1년 + 1회 연장 1년 = 총 2년'이고, 2년을 넘겨 계속 쓰면 사용사업주가 직접고용한 것으로 봅니다(고령자 등 예외 있음). 차별시정은 차별이 있은 날부터 6개월 내 노동위에 신청하고, 결정적으로 '입증책임은 사용자'에게 있습니다 — 근로자가 차별을 다 증명하는 게 아니라 사용자가 '차별이 아니다'를 증명해야 해요. 단시간근로자에게도 연차·유급휴일이 (근로시간 비례로) 적용된다는 점이 자주 틀린 보기로 나옵니다."},
+{ch:"HRM 실무", t:"직무 — 위계와 평가만 잡으면 된다", body:"직무 단원은 두 덩어리예요. 첫째, 위계: 요소 < 과업 < 의무 < 직위 < 직무 < 직군. 작은 단위에서 큰 단위로 올라가는 이 순서를 뒤집어 함정을 냅니다. 분석 절차는 배경정보 → 직무분류·대상선정 → 정보수집 → 직무기술서·직무명세서 작성인데, 여기서 '기술서=직무 내용, 명세서=사람의 자격요건'을 헷갈리지 마세요. 둘째, 직무평가(님 약점): 비계량법은 서열법·분류법, 계량법은 점수법·요소비교법입니다. 점수법은 요소별로 점수를 매겨 합산하고, 그 유명한 Hay 기법이 점수법의 일종으로 Know-How·Problem Solving·Accountability 3차원을 씁니다. 정원산정 공식 '업무량 ÷ 근로시간 × (1+여유율)'은 계산문제로 거의 매번 나오니 손으로 한 번 풀어두세요."},
+{ch:"HRM 실무", t:"평가·OKR — 비중 최대 구간", body:"평가체계의 지향점은 성과·능력·육성주의 셋이고, '보상주의'는 지향점이 아닙니다(가장 단골인 함정). 역량은 '현재·미래·방법론', 성과는 '과거·결과'로 대비됩니다 — 성과를 '장기·미래'로 바꿔 함정을 내요. BSC 4관점은 재무·고객·내부프로세스·학습과성장이고, 여기 '전략목표'를 끼워 넣으면 틀린 보기입니다. OKR은 KPI와 대비해서 외우는 게 핵심: KPI는 지표달성이 목적, OKR은 목표·성장·도전이 목적이에요. OKR 핵심도구 3가지는 대화·피드백·인정(Conversation·Feedback·Recognition)이고 '가이드'를 끼우면 오답입니다. 성과/역량 Matrix 사분면(Star·Diligent 등)은 교재 명칭을 그대로 외우라고 만든 트랩이라, 이해보다 암기로 가세요."},
+{ch:"HRM 실무", t:"교육·승진·보상 — 헷갈리는 쌍만 정리", body:"교육에서 자주 묻는 쌍은 OJT vs Off-JT(님 약점)입니다. OJT는 현장에서 일하며 배우는 비공식(informal)·저비용 방식이고, Off-JT는 집합·표준화 교육이에요. 'OJT가 사무직 능력개발에 유용'이라는 식의 보기는 함정입니다(OJT는 현장 실무형). 승진 원칙은 적정성·공정성·합리성·형평성 넷, 승진 유형은 직급·자격·대용·역직승진으로 나뉩니다. 보상은 고정급(Fixed: 기본급·정기상여)과 변동급(Variable: 수당·PS·성과급)을 가르는 게 출발점인데, 교재·회차에 따라 수당을 고정으로 보기도 하니 정답표 기준으로 외우세요. 성과급에서 'Threshold'는 이 점수 밑이면 성과급이 0이 되는 지급 임계점이라는 것, 이것 하나는 확실히 챙기면 됩니다."}
+];
+
+/* ============ 빈출 함정 치트시트 ============ */
+const TRAPS=[
+{t:"'옳은 것의 개수' 지문", d:"가~사 중 몇 개가 맞는지 세는 유형. 한 문장이라도 숫자·예외를 비틀어 끼워넣는다. 각 문장을 O/X로 먼저 매기고 개수를 셀 것."},
+{t:"전액지급 공제 예외", d:"임금 공제가 허용되는 근거는 '법령 또는 단체협약'뿐. 취업규칙·근로계약으로 공제 가능하다고 하면 X."},
+{t:"정리해고 통보 시점", d:"근로자대표에게 해고 50일 전 통보·협의. 60일로 바꿔 나오면 X."},
+{t:"해고예고", d:"30일 전 예고 또는 30일분 통상임금. 예고를 안 해도 해고 효력 자체는 유지된다."},
+{t:"평가 지향점", d:"성과·능력·육성주의가 지향점. '보상주의'가 끼면 X."},
+{t:"BSC 4관점", d:"재무·고객·내부프로세스·학습과성장. '전략목표'가 끼면 X."},
+{t:"OKR vs KPI", d:"OKR 목적=목표·성장(도전적). KPI 목적=지표달성. 둘을 바꿔 연결하면 X. OKR 핵심도구=대화·피드백·인정."},
+{t:"휴게시간 3종 키워드", d:"근로시간 '도중'에, '무급'으로, '자유이용'. 하나라도 빠지거나 바뀌면 X. (4h당 30분/8h당 1h)"},
+{t:"출근 간주 기간", d:"산재 휴업·출산전후휴가·부당해고기간은 출근 간주(연차 출근율 안 깎임). 정직기간은 제외."},
+{t:"임금 해당여부", d:"축의·조위·위로금, 실비변상(출장·식비), 복지성 대여는 임금 X. 자기앞수표·계좌입금 지급은 O."},
+{t:"비정규직 입증책임", d:"차별 분쟁의 입증책임은 '사용자'. 근로자가 증명한다고 하면 X. 시정신청은 6개월 내."},
+{t:"통상임금 노사합의", d:"통상임금을 노사합의로 제외하기로 해도 그 합의는 무효(강행규정)."}
+];
+
 /* ============ TABS ============ */
 document.querySelectorAll('.tabs button').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -652,12 +879,13 @@ function buildList(){
   if(cfg.sub!=="ALL")qs=qs.filter(q=>q.sub===cfg.sub);
   if(cfg.mode==="wrong"){const w=qstore.wrong[cfg.round]||[];qs=qs.filter(q=>w.includes(q.n));}
   if(cfg.mode==="star"){const s=qstore.star[cfg.round]||[];qs=qs.filter(q=>s.includes(q.n));}
+  if(cfg.mode==="calc"){qs=qs.filter(q=>q.cal);}
   if(cfg.mode==="random")qs.sort(()=>Math.random()-0.5);
   return qs;
 }
 $('startBtn').addEventListener('click',()=>{
   const qs=buildList();
-  if(!qs.length){alert(cfg.mode==="wrong"?"저장된 오답이 없습니다. 먼저 풀어보세요!":cfg.mode==="star"?"별표한 문제가 없습니다.":"해당 조건의 문제가 없습니다.");return;}
+  if(!qs.length){alert(cfg.mode==="wrong"?"저장된 오답이 없습니다. 먼저 풀어보세요!":cfg.mode==="star"?"별표한 문제가 없습니다.":cfg.mode==="calc"?"이 조건에 계산문제가 없습니다.":"해당 조건의 문제가 없습니다.");return;}
   session={list:qs,i:0,correct:0,wrongList:[],picked:null};
   $('qhome').classList.add('hidden');$('qresult').classList.add('hidden');$('qquiz').classList.remove('hidden');
   $('appbar').style.display='none';
@@ -678,7 +906,7 @@ function renderQ(){
     el.innerHTML=`<div class="num">${NUMK[idx]}</div><div class="ctxt">${opt}</div>`;
     el.addEventListener('click',()=>pick(idx+1));ch.appendChild(el);
   });
-  $('verdict').className='verdict';$('verdict').textContent='';$('nextBtn').classList.add('hidden');
+  $('verdict').className='verdict';$('verdict').textContent='';$('qexp').className='expbox';$('qexp').innerHTML='';$('nextBtn').classList.add('hidden');
   $('starBtn').addEventListener('click',()=>{
     const arr=qstore.star[cfg.round]||(qstore.star[cfg.round]=[]);const k=arr.indexOf(q.n);
     if(k>=0)arr.splice(k,1);else arr.push(q.n);saveQuiz();
@@ -696,6 +924,8 @@ function pick(choice){
   else{s.wrongList.push(q);v.className='verdict show bad';v.textContent="오답입니다. 정답: "+q.a.map(x=>NUMK[x-1]).join(", ");
     const w=qstore.wrong[cfg.round]||(qstore.wrong[cfg.round]=[]);if(!w.includes(q.n))w.push(q.n);}
   $('scorePill').textContent="✓ "+s.correct;saveQuiz();$('nextBtn').classList.remove('hidden');
+  const ex=(EXP[cfg.round]&&EXP[cfg.round][q.n]);
+  if(ex){$('qexp').innerHTML=`<div class="exlab">해설</div>${escapeHtml(ex)}`;$('qexp').classList.add('show');}
 }
 $('nextBtn').addEventListener('click',()=>{const s=session;s.i++;if(s.i>=s.list.length)showResult();else renderQ();});
 $('backBtn').addEventListener('click',()=>{if(confirm("풀이를 중단할까요?")){$('qquiz').classList.add('hidden');$('qhome').classList.remove('hidden');$('appbar').style.display='';refreshBest();}});
@@ -705,13 +935,31 @@ function showResult(){
   const total=s.list.length,raw=s.correct,isFull=(cfg.sub==="ALL"&&total===50);
   const pct=Math.round(raw/total*100);
   $('resScore').textContent=(isFull?raw*2:pct)+"점";
-  const pass=isFull?(raw>=35):(pct>=70);
-  $('resPf').innerHTML=`<span class="pf ${pass?'pass':'fail'}">${pass?'합격선 통과 ✓':'합격선 미달'}</span>`;
+  // 과목별 집계 (이번 세션 기준)
+  let hrmT=0,hrmC=0,lawT=0,lawC=0;
+  s.list.forEach(q=>{const correct=!s.wrongList.includes(q);
+    if(q.sub==='HRM'){hrmT++;if(correct)hrmC++;}else{lawT++;if(correct)lawC++;}});
+  // 과락 = 과목별 40점(=정답률 40%) 미만
+  const hrmFail=hrmT>0&&(hrmC/hrmT)<0.4, lawFail=lawT>0&&(lawC/lawT)<0.4;
+  const pass=isFull?(raw>=35 && !hrmFail && !lawFail):(pct>=70);
+  $('resPf').innerHTML=`<span class="pf ${pass?'pass':'fail'}">${pass?'합격선 통과 ✓':(isFull&&(hrmFail||lawFail)?'과락 위험 ⚠':'합격선 미달')}</span>`;
   $('resLine').innerHTML=`정답 <b>${raw}</b> / ${total}문항${isFull?` · 환산 <b>${raw*2}점</b> (합격 70점)`:` · 정답률 <b>${pct}%</b>`}`;
+  // 과목별 카드
+  let subHtml='';
+  if(hrmT)subHtml+=`<div class="subcard ${hrmFail?'fail':''}"><span class="sn">HRM실무</span><span class="sv">${hrmC}/${hrmT}</span>${hrmFail?'<span class="sf">과락위험</span>':''}</div>`;
+  if(lawT)subHtml+=`<div class="subcard ${lawFail?'fail':''}"><span class="sn">근로관계법</span><span class="sv">${lawC}/${lawT}</span>${lawFail?'<span class="sf">과락위험</span>':''}</div>`;
+  $('subScore').innerHTML=subHtml;
+  $('subScore').className='subrow'+((hrmT&&lawT)?'':' single');
+  // 오답 리뷰 (해설 포함)
   const box=$('reviewBox');
   if(s.wrongList.length){
-    let html=`<h3>틀린 문제 ${s.wrongList.length}개 다시 보기</h3>`;
-    s.wrongList.forEach(q=>{html+=`<div class="rvitem"><div class="rq">[${cfg.round}회 ${q.n}번] ${escapeHtml(q.q.split("\n")[0])}</div><div class="ra"><span class="ans">정답 ${q.a.map(x=>NUMK[x-1]).join(", ")}</span> — ${escapeHtml(q.o[q.a[0]-1])}</div></div>`;});
+    let html=`<h3>틀린 문제 ${s.wrongList.length}개 · 해설</h3>`;
+    s.wrongList.forEach(q=>{
+      const ex=(EXP[cfg.round]&&EXP[cfg.round][q.n]);
+      html+=`<div class="rvitem"><div class="rq">[${cfg.round}회 ${q.n}번·${q.sub==='HRM'?'실무':'법'}] ${escapeHtml(q.q.split("\n")[0])}</div>`+
+        `<div class="ra"><span class="ans">정답 ${q.a.map(x=>NUMK[x-1]).join(", ")}</span> ${escapeHtml(q.o[q.a[0]-1])}</div>`+
+        (ex?`<div class="rex">${escapeHtml(ex)}</div>`:``)+`</div>`;
+    });
     box.innerHTML=html;
   }else box.innerHTML=`<h3 style="text-align:center;color:var(--ok)">전부 맞혔습니다! 🎉</h3>`;
   if(isFull){const prev=qstore.best[cfg.round];if(prev==null||raw*2>prev)qstore.best[cfg.round]=raw*2;}
@@ -824,6 +1072,30 @@ $('syncOff').addEventListener('click',()=>{
 /* ============ INIT ============ */
 function dday(){const diff=Math.round((EXAM_DATE-today0)/86400000);$('ddayNum').textContent=diff>0?'D-'+diff:diff===0?'D-DAY':'종료';}
 buildPlan();buildCards();dday();loadPlan();loadQuiz();
+
+/* ============ READING PANE ============ */
+function buildReading(){
+  const today=$('read-today');let html='';let curGrp=null;
+  READINGS.forEach(r=>{
+    if(r.ch!==curGrp){curGrp=r.ch;html+=`<div class="rgrp">${r.ch}</div>`;}
+    html+=`<div class="rcard"><h4>${r.t}</h4><p>${r.body}</p></div>`;
+  });
+  html+=`<div class="rdisc">시험 직전 회독용 요약 해설입니다. 세부 수치·예외는 교재·기출로 한 번 더 확인하세요.</div>`;
+  today.innerHTML=html;
+  const trap=$('read-trap');let th='';
+  TRAPS.forEach(t=>{th+=`<div class="trap"><div class="tt">⚠️ ${t.t}</div><div class="td">${t.d}</div></div>`;});
+  th+=`<div class="rdisc">시험장 들어가기 직전에 이 12개만 빠르게 훑으세요.</div>`;
+  trap.innerHTML=th;
+}
+document.querySelectorAll('.rtab').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.rtab').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    const v=b.dataset.rtab;
+    $('read-today').classList.toggle('hidden',v!=='today');
+    $('read-trap').classList.toggle('hidden',v!=='trap');
+  });
+});
+buildReading();
 loadSyncCfg();refreshSyncUI();
 // on launch, if sync on, pull latest so other-device edits show up
 (async()=>{
